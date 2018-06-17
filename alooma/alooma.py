@@ -666,8 +666,8 @@ class Client(object):
                             "`list`")
         for metric_name in metric_names:
             if metric_name not in METRICS_LIST:
-                raise Exception("Metrics '{name}' not exists, please "
-                                "use one or more of those: {metrics}"
+                raise Exception("Metrics '{name}' does not exist, please "
+                                "use one or more of these: {metrics}"
                                 .format(name=metric_names,
                                         metrics=METRICS_LIST))
         if resolution is None:
