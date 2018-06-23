@@ -787,13 +787,13 @@ class Client(object):
         return parse_response_to_json(res)
 
     def create_table_from_mapping(self, mapping, schema, table_name, 
-                                  dist_keys=[], sort_keys=[]):
+                                  dist_keys=None, sort_keys=None):
         """ Create Table Based on Mapping Fields 
         :param mapping: Mapping object (from api.get_mapping)
         :param schema: Schema of new table
         :param table: Name of new table
-        :param dist_keys: Dist Keys to add to table
-        :param sort_keys: Sort keys to add to table
+        :param dist_keys: List of dist keys to add to table
+        :param sort_keys: List of sort keys to add to table
         """
         columns = self._extract_column_list(deepcopy(mapping),
                                             dist_keys=dist_keys,
@@ -801,11 +801,11 @@ class Client(object):
         table_obj = "%s/%s" % (schema, table_name)
         return self.create_table(table_obj, columns)
 
-    def _extract_column_list(self, mapping, dist_keys=[], sort_keys=[]):
+    def _extract_column_list(self, mapping, dist_keys=None, sort_keys=None):
         """ Extract Columns Using Mapping and Desired Keys """
         fields = []
         for field in mapping["fields"]:
-            if len(field["fields"]) > 0:
+            if field["fields"]:
                 fields += self._extract_column_list(field)
             if field["mapping"]:
                 column_data = field["mapping"]
@@ -819,10 +819,10 @@ class Client(object):
                         del column_data["subFields"]
 
                 # Add Dist Key if Desired
-                if field['fieldName'] in dist_keys:
+                if dist_keys and field['fieldName'] in dist_keys:
                     column_data['distKey'] = True
                 # Add Sort Keys if Desired
-                if field['fieldName'] in sort_keys:
+                if sort_keys and field['fieldName'] in sort_keys:
                     column_data['sortKeyIndex'] = [i for i,v in enumerate(sort_keys)
                                                    if v == field['fieldName']][0]
 
@@ -839,7 +839,7 @@ class Client(object):
                                                             table=table_name)
         res = self._Client__send_request(requests.delete, url)
         res.raise_for_status()
-        
+
         return res
 
     def alter_table(self, table_name, columns):
