@@ -838,7 +838,8 @@ class Client(object):
         url = self.rest_url + endpoints.CREATE_TABLE.format(schema=schema,
                                                             table=table_name)
         res = self._Client__send_request(requests.delete, url)
-
+        res.raise_for_status()
+        
         return res
 
     def alter_table(self, table_name, columns):
