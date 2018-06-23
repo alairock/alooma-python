@@ -5,6 +5,8 @@ import requests
 import warnings
 from six.moves import urllib
 
+from . import endpoints
+
 MAPPING_MODES = ['AUTO_MAP', 'STRICT', 'FLEXIBLE']
 EVENT_DROPPING_TRANSFORM_CODE = "def transform(event):\n\treturn None"
 DEFAULT_TRANSFORM_CODE = "def transform(event):\n\treturn event"
@@ -757,6 +759,8 @@ class Client(object):
             raise Exception("Failed to get max latency, returning 0. "
                             "Reason: %s", e)
 
+    # region Output Management
+
     def create_table(self, table_name, columns):
         """
         :param table_name: self descriptive
@@ -781,6 +785,61 @@ class Client(object):
         res = self.__send_request(requests.post, url, json=columns)
 
         return parse_response_to_json(res)
+
+    def create_table_from_mapping(self, mapping, schema, table_name, 
+                                  dist_keys=[], sort_keys=[]):
+        """ Create Table Based on Mapping Fields 
+        :param mapping: Mapping object (from api.get_mapping)
+        :param schema: Schema of new table
+        :param table: Name of new table
+        :param dist_keys: Dist Keys to add to table
+        :param sort_keys: Sort keys to add to table
+        """
+        columns = self._extract_column_list(deepcopy(mapping),
+                                            dist_keys=dist_keys,
+                                            sort_keys=sort_keys)
+        table_obj = "%s/%s" % (schema, table_name)
+        return self.create_table(table_obj, columns)
+
+    def _extract_column_list(self, mapping, dist_keys=[], sort_keys=[]):
+        """ Extract Columns Using Mapping and Desired Keys """
+        fields = []
+        for field in mapping["fields"]:
+            if len(field["fields"]) > 0:
+                fields += self._extract_column_list(field)
+            if field["mapping"]:
+                column_data = field["mapping"]
+                if column_data["isDiscarded"]:
+                    continue
+                # Remove Alooma Meta Fields
+                attrs_to_clean = ["subFields", "isDiscarded", 
+                                  "machineGenerated"]
+                for attr in attrs_to_clean:
+                    if attr in column_data:
+                        del column_data["subFields"]
+
+                # Add Dist Key if Desired
+                if field['fieldName'] in dist_keys:
+                    column_data['distKey'] = True
+                # Add Sort Keys if Desired
+                if field['fieldName'] in sort_keys:
+                    column_data['sortKeyIndex'] = [i for i,v in enumerate(sort_keys)
+                                                   if v == field['fieldName']][0]
+
+                fields.append(column_data)
+
+        return fields
+
+    def drop_table(self, schema, table_name):
+        """ Drop Table on Default Output 
+        :param schema: Schema of table to drop
+        :param table: Name of table to drop
+        """
+        url = self.rest_url + endpoints.CREATE_TABLE.format(schema=schema,
+                                                            table=table_name)
+        res = self._Client__send_request(requests.delete, url)
+
+        return res
 
     def alter_table(self, table_name, columns):
         """
@@ -829,6 +888,30 @@ class Client(object):
         url = self.rest_url + 'tables%s' % schema_string
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)
+
+    def get_table_schema(self, schema, table_name):
+        """ Return Table Schema From Default Output 
+
+        :param schema: output table schema
+        :param table_name: output table name
+        """
+        url = self.rest_url + endpoints.CREATE_TABLE.format(schema=schema,
+                                                            table=table_name)
+        res = self._Client__send_request(requests.get, url)
+        
+        res.raise_for_status()
+        columns = parse_response_to_json(res)["columns"]
+
+        # Clean Out Fields Not Used in Table Management
+        for col in columns:
+            if "subColumns" in col and col["subColumns"] is None:
+                del col["subColumns"]
+            if "subColumnsMap" in col and col["subColumnsMap"] is None:
+                del col["subColumnsMap"]
+
+        return columns
+
+    # endregion
 
     def get_notifications(self, epoch_time):
         url = self.rest_url + "notifications?from={epoch_time}". \
