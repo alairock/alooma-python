@@ -786,9 +786,9 @@ class Client(object):
 
         return parse_response_to_json(res)
 
-    def create_table_from_mapping(self, mapping, schema, table_name, 
+    def create_table_from_mapping(self, mapping, schema, table_name,
                                   dist_keys=None, sort_keys=None):
-        """ Create Table Based on Mapping Fields 
+        """ Create Table Based on Mapping Fields
         :param mapping: Mapping object (from api.get_mapping)
         :param schema: Schema of new table
         :param table: Name of new table
@@ -812,7 +812,7 @@ class Client(object):
                 if column_data["isDiscarded"]:
                     continue
                 # Remove Alooma Meta Fields
-                attrs_to_clean = ["subFields", "isDiscarded", 
+                attrs_to_clean = ["subFields", "isDiscarded",
                                   "machineGenerated"]
                 for attr in attrs_to_clean:
                     if attr in column_data:
@@ -831,7 +831,7 @@ class Client(object):
         return fields
 
     def drop_table(self, schema, table_name):
-        """ Drop Table on Default Output 
+        """ Drop Table on Default Output
         :param schema: Schema of table to drop
         :param table: Name of table to drop
         """
@@ -891,7 +891,7 @@ class Client(object):
         return parse_response_to_json(res)
 
     def get_table_schema(self, schema, table_name):
-        """ Return Table Schema From Default Output 
+        """ Return Table Schema From Default Output
 
         :param schema: output table schema
         :param table_name: output table name
@@ -899,7 +899,7 @@ class Client(object):
         url = self.rest_url + endpoints.CREATE_TABLE.format(schema=schema,
                                                             table=table_name)
         res = self._Client__send_request(requests.get, url)
-        
+
         res.raise_for_status()
         columns = parse_response_to_json(res)["columns"]
 
