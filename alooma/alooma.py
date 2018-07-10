@@ -69,7 +69,10 @@ class FailedToCreateInputException(Exception):
 class Client(object):
 
     def __init__(self, username=None, password=None, account_name=None,
-                 base_url=None):
+                 base_url=None, api_key=None):
+
+        if api_key and (username or password):
+            raise Exception('Authorization should be performed by either an API key or username and password, but not both.')
 
         if base_url is None:
             base_url = BASE_URL
@@ -89,6 +92,12 @@ class Client(object):
             'timeout': DEFAULT_TIMEOUT,
             'cookies': self.cookie
         }
+
+        self.api_key = api_key
+        if self.api_key:
+            headers = {"authorization": "API " + self.api_key}
+            self.requests_params["headers"] = headers
+
         self.account_name = self.__get_account_name()
 
     def __send_request(self, func, url, is_recheck=False, **kwargs):
@@ -100,6 +109,8 @@ class Client(object):
             return response
 
         if response.status_code == 401 and not is_recheck:
+            if self.api_key:
+                raise Exception('Invalid API key. Please try to generate a new one.')
             self.__login()
 
             return self.__send_request(func, url, True, **kwargs)
