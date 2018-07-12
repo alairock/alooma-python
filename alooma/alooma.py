@@ -60,6 +60,7 @@ DEFAULT_TIMEOUT = 60
 MAPPING_TIMEOUT = 300
 
 BASE_URL = 'https://app.alooma.com'
+CUSTOM_CONSOLIDATION_V2 = 'v2/consolidation/custom'
 
 
 class FailedToCreateInputException(Exception):
@@ -139,6 +140,9 @@ class Client(object):
         url = self.rest_url + 'repository'
         res = self.__send_request(requests.get, url)
         return res.json().get('config_clientName')
+
+    def get_zk_deployment_name(self):
+        return self.get_deployment_info()['deploymentName']
 
     def get_config(self):
         """
@@ -1335,14 +1339,15 @@ class Client(object):
         if event_type is None:
             raise Exception('Event type must be provided')
 
-        scheduled_query_url = self.rest_url + 'custom-consolidation'
+        scheduled_query_url = self.rest_url + CUSTOM_CONSOLIDATION_V2
 
         # Prep Data for Consolidation Post
         data = {
             "custom_query": query,
             "event_type": event_type,
             "frequency": frequency,
-            "run_at": run_at
+            "run_at": run_at,
+            "deployment_name": self.get_zk_deployment_name()
         }
 
         return self.__send_request(requests.post,
