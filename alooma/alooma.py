@@ -140,17 +140,6 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return res.json().get('config_clientName')
 
-    def get_config(self):
-        """
-        Exports the entire system configuration in dict format.
-        This is also used periodically by Alooma for backup purposes,
-        :return: a dict representation of the system configuration
-        """
-        url_get = self.rest_url + 'config/export'
-        response = self.__send_request(requests.get, url=url_get)
-        config_export = parse_response_to_json(response)
-        return config_export
-
     def get_plumbing(self):
         """
         DEPRECATED - use get_structure() instead.
