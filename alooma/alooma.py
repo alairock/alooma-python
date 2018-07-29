@@ -110,7 +110,7 @@ class Client(object):
 
         if response.status_code == 401 and not is_recheck:
             if self.api_key:
-                raise Exception('Invalid API key. Please try to generate a new one.')
+                raise Exception('Invalid key or check account name.')
             self.__login()
 
             return self.__send_request(func, url, True, **kwargs)
