@@ -1343,12 +1343,15 @@ class Client(object):
 
         # Prep Data for Consolidation Post
         data = {
-            "custom_query": query,
-            "event_type": event_type,
-            "frequency": frequency,
-            "run_at": run_at,
-            "deployment_name": self.get_zk_deployment_name()
+        "custom_query": query,
+        "event_type": event_type,
+        "deployment_name": self.get_zk_deployment_name(),
+        "avoid_duplicates": False
         }
+        if frequency:
+            data["frequency"] = frequency
+        else:
+            data["run_at"] = run_at
 
         return self.__send_request(requests.post,
                                    scheduled_query_url,
