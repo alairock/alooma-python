@@ -111,7 +111,7 @@ class Client(object):
 
         if response.status_code == 401 and not is_recheck:
             if self.api_key:
-                raise Exception('Invalid API key. Please try to generate a new one.')
+                raise Exception('Invalid key or check account name.')
             self.__login()
 
             return self.__send_request(func, url, True, **kwargs)
@@ -143,18 +143,7 @@ class Client(object):
 
     def get_zk_deployment_name(self):
         return self.get_deployment_info()['deploymentName']
-
-    def get_config(self):
-        """
-        Exports the entire system configuration in dict format.
-        This is also used periodically by Alooma for backup purposes,
-        :return: a dict representation of the system configuration
-        """
-        url_get = self.rest_url + 'config/export'
-        response = self.__send_request(requests.get, url=url_get)
-        config_export = parse_response_to_json(response)
-        return config_export
-
+    
     def get_plumbing(self):
         """
         DEPRECATED - use get_structure() instead.
