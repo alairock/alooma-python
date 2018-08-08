@@ -143,7 +143,7 @@ class Client(object):
 
     def get_zk_deployment_name(self):
         return self.get_deployment_info()['deploymentName']
-    
+
     def get_plumbing(self):
         """
         DEPRECATED - use get_structure() instead.
