@@ -573,8 +573,8 @@ class Client(object):
         """
         Returns a map from module name to module code
         """
-        warnings.warn('set_transform is deprecated since version 0.4.0 and will'
-                      ' be removed in version 1.0, please use '
+        warnings.warn('get_all_transforms is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
                       'get_code_engine_code instead',
                       DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions'
@@ -583,8 +583,8 @@ class Client(object):
         return {item['functionName']: item['code'] for item in res.json()}
 
     def get_transform(self, module_name='main'):
-        warnings.warn('set_transform is deprecated since version 0.4.0 and will'
-                      ' be removed in version 1.0, please use '
+        warnings.warn('get_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
                       'get_code_engine_module instead',
                       DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
@@ -602,8 +602,8 @@ class Client(object):
                 raise
 
     def set_transform(self, transform, module_name='main'):
-        warnings.warn('set_transform is deprecated since version 0.4.0 and will'
-                      ' be removed in version 1.0, please use '
+        warnings.warn('set_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
                       'set_code_engine_code instead',
                       DeprecationWarning, stacklevel=2)
         data = {'language': 'PYTHON', 'code': transform,
@@ -613,8 +613,8 @@ class Client(object):
         return res
 
     def delete_transform(self, module_name):
-        warnings.warn('set_transform is deprecated since version 0.4.0 and will'
-                      ' be removed in version 1.0, please use '
+        warnings.warn('delete_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
                       'delete_code_engine_module instead',
                       DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
@@ -634,8 +634,8 @@ class Client(object):
                             'result' - the resulting event
                             'runtime' - millis it took the function to run
         """
-        warnings.warn('set_transform is deprecated since version 0.4.0 and will'
-                      ' be removed in version 1.0, please use '
+        warnings.warn('test_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
                       'test_code_engine_code instead',
                       DeprecationWarning, stacklevel=2)
 
@@ -663,8 +663,8 @@ class Client(object):
                     which includes the result of the current transform function
                     after it was run with the sample.
         """
-        warnings.warn('set_transform is deprecated since version 0.4.0 and will'
-                      ' be removed in version 1.0, please use '
+        warnings.warn('test_transform_all_samples is deprecated since version'
+                      ' 0.4.0 and will be removed in version 1.0, please use '
                       'test_code_engine_all_samples instead',
                       DeprecationWarning, stacklevel=2)
 
