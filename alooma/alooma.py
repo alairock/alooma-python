@@ -573,12 +573,20 @@ class Client(object):
         """
         Returns a map from module name to module code
         """
+        warnings.warn('get_all_transforms is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'get_code_engine_code instead',
+                      DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions'
         res = self.__send_request(requests.get, url)
         # from list of CodeSnippets to {moduleName: code} mapping
         return {item['functionName']: item['code'] for item in res.json()}
 
     def get_transform(self, module_name='main'):
+        warnings.warn('get_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'get_code_engine_module instead',
+                      DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
         try:
             res = self.__send_request(requests.get, url)
@@ -594,6 +602,10 @@ class Client(object):
                 raise
 
     def set_transform(self, transform, module_name='main'):
+        warnings.warn('set_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'set_code_engine_code instead',
+                      DeprecationWarning, stacklevel=2)
         data = {'language': 'PYTHON', 'code': transform,
                 'functionName': module_name}
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
@@ -601,6 +613,10 @@ class Client(object):
         return res
 
     def delete_transform(self, module_name):
+        warnings.warn('delete_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'delete_code_engine_module instead',
+                      DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
         return self.__send_request(requests.delete, url)
 
@@ -618,6 +634,11 @@ class Client(object):
                             'result' - the resulting event
                             'runtime' - millis it took the function to run
         """
+        warnings.warn('test_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'test_code_engine_code instead',
+                      DeprecationWarning, stacklevel=2)
+
         url = self.rest_url + 'transform/functions/run'
         if temp_transform is None:
             temp_transform = self.get_transform()
@@ -642,6 +663,11 @@ class Client(object):
                     which includes the result of the current transform function
                     after it was run with the sample.
         """
+        warnings.warn('test_transform_all_samples is deprecated since version'
+                      ' 0.4.0 and will be removed in version 1.0, please use '
+                      'test_code_engine_all_samples instead',
+                      DeprecationWarning, stacklevel=2)
+
         curr_transform = self.get_transform()
         samples_stats = self.get_samples_stats()
         results = []
@@ -655,6 +681,107 @@ class Client(object):
                     for s in samples:
                         s['result'] = self.test_transform(s['sample'],
                                                           curr_transform)
+                        results.append(s)
+        return results
+
+    def get_code_engine_code(self):
+        """
+        :return: a map from module name to module code
+        """
+        return self.get_all_transforms()
+
+    def get_code_engine_module(self, module_name='main'):
+        """
+        :param module_name: optional module_name to retrieve (gets 'main' by default)
+        :return: module code
+        """
+        return self.get_code_engine_code()[module_name]
+
+    def set_code_engine_code(self, modules):
+        """
+        :param modules: a map of module name (string) to code (string)
+        """
+        url = self.rest_url + 'transform/v2/functions'
+        data = [{
+            'language': 'PYTHON',
+            'functionName': module_name,
+            'code': modules[module_name]
+        } for module_name in modules.keys() if module_name != 'main']
+        res = self.__send_request(requests.post, url, json=data)
+        res.raise_for_status()
+
+        return res
+
+    def delete_code_engine_module(self, module_name):
+        """
+        :param module_name: module_name to delete
+        """
+        return self.delete_transform(module_name)
+
+    def test_code_engine_code(self, sample, modules_to_test=None):
+        """
+        :param sample:          a json string or a dict, representing a sample
+                                event
+        :param modules_to_test: optional a map of module name (string) to code
+                                (string).
+                                if not provided, the currently deployed
+                                modules will be used.
+        :return:                the results of a test run of the modules on the
+                                given sample. This returns a dictionary with the
+                                following keys:
+                                    'output' - strings printed by the transform
+                                               function
+                                    'result' - the resulting event
+                                    'runtime' - millis it took the code to run
+        """
+        url = self.rest_url + 'transform/v2/functions/run'
+        if modules_to_test is None:
+            modules_to_test = self.get_all_transforms()
+
+        modules_to_send = [{
+            'language': 'PYTHON',
+            'functionName': module_name,
+            'code': modules_to_test[module_name]
+        } for module_name in modules_to_test.keys()]
+
+        if not isinstance(sample, dict):
+            sample = json.loads(sample)
+
+        res = self.__send_request(requests.post, url, json={
+            'modules': modules_to_send,
+            'sample': sample
+        })
+        res.raise_for_status()
+        return json.loads(res.content)
+
+    def test_code_engine_all_samples(self, event_type=None, status_code=None):
+        """
+        test many samples on the current transform at once
+        :param event_type:  optional string containing event type name
+        :param status_code: optional status code string
+        :return:    a list of samples (filtered by the event type & status code
+                    if provided), for each sample, a 'result' key is added
+                    which includes the result of the current transform function
+                    after it was run with the sample.
+        """
+        current_modules = self.get_all_transforms()
+        modules = [{
+            'language': 'PYTHON',
+            'functionName': module_name,
+            'code': current_modules[module_name]
+        } for module_name in current_modules.keys()]
+        samples_stats = self.get_samples_stats()
+        results = []
+        event_types = [event_type] if event_type else samples_stats.keys()
+        for event_type in event_types:
+            status_codes = [status_code] if status_code \
+                else samples_stats[event_type].keys()
+            for sc in status_codes:
+                if samples_stats[event_type][sc] > 0:
+                    samples = self.get_samples(event_type, sc)
+                    for s in samples:
+                        s['result'] = self.test_code_engine_code(s['sample'],
+                                                                 modules)
                         results.append(s)
         return results
 
