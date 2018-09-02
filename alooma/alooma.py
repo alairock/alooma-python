@@ -166,6 +166,7 @@ class Client(object):
         """
         url = self.rest_url + 'secrets'
         res = self.__send_request(requests.get, url)
+        res.raise_for_status()
         return res.content
 
     def set_secrets(self, secrets):
@@ -175,6 +176,7 @@ class Client(object):
         """
         url = self.rest_url + 'secrets'
         res = self.__send_request(requests.put, url, json=secrets)
+        res.raise_for_status()
         return res
 
     def delete_secret(self, secret):
@@ -184,6 +186,7 @@ class Client(object):
         """
         url = self.rest_url + 'secrets/' + secret
         res = self.__send_request(requests.delete, url)
+        res.raise_for_status()
         return res
 
     def get_mapping_mode(self):
