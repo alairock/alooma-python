@@ -706,7 +706,7 @@ class Client(object):
             'language': 'PYTHON',
             'functionName': module_name,
             'code': modules[module_name]
-        } for module_name in modules.keys() if module_name != 'main']
+        } for module_name in modules.keys()]
         res = self.__send_request(requests.post, url, json=data)
         res.raise_for_status()
 
