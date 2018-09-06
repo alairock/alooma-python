@@ -159,36 +159,6 @@ class Client(object):
         response = self.__send_request(requests.get, url_get)
         return parse_response_to_json(response)
 
-    def get_secrets(self):
-        """
-        Returns the list of existing secrets
-        :return: A list of secret keys
-        """
-        url = self.rest_url + 'secrets'
-        res = self.__send_request(requests.get, url)
-        res.raise_for_status()
-        return res.content
-
-    def set_secrets(self, secrets):
-        """
-        :param secrets:  dictionary of secrets to create/update
-        Create/Update secrets
-        """
-        url = self.rest_url + 'secrets'
-        res = self.__send_request(requests.put, url, json=secrets)
-        res.raise_for_status()
-        return res
-
-    def delete_secret(self, secret):
-        """
-        :param secret:  A key of a secret to delete
-        Deletes a secret
-        """
-        url = self.rest_url + 'secrets/' + secret
-        res = self.__send_request(requests.delete, url)
-        res.raise_for_status()
-        return res
-
     def get_mapping_mode(self):
         """
         Returns the default mapping mode currently set in the system.
