@@ -909,6 +909,19 @@ class Client(object):
 
         return parse_response_to_json(res)
 
+    def drop_table(self, table_name, cascade=False):
+        """
+        :param table_name: self descriptive
+        :param cascade: if true, drops all dependencies of a table along with
+                        the table itself, otherwise only drops the table
+        """
+        url = self.rest_url + 'tables/' + table_name
+
+        res = self.__send_request(requests.delete, url,
+                                  params={'cascade': cascade})
+
+        return parse_response_to_json(res)
+
     def alter_table(self, table_name, columns):
         """
         :param table_name: self descriptive
