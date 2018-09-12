@@ -909,18 +909,27 @@ class Client(object):
 
         return parse_response_to_json(res)
 
-    def drop_table(self, table_name, cascade=False):
+    def drop_table(self, table_name, schema=None, cascade=False):
         """
         :param table_name: self descriptive
         :param cascade: if true, drops all dependencies of a table along with
                         the table itself, otherwise only drops the table
+        :param schema: schema in which the table to delete is located. If no
+                       such schema is supplied, default schema is used
         """
-        url = self.rest_url + 'tables/' + table_name
+        if schema is None:
+            schema = self.get_default_schema()
 
-        res = self.__send_request(requests.delete, url,
-                                  params={'cascade': cascade})
+        cascade_param = '?cascade=true' if cascade else ''
+        url = self.rest_url + 'tables/{schema}/{table}{cascade}'.format(
+            schema=schema,
+            table=table_name,
+            cascade=cascade_param
+        )
 
-        return parse_response_to_json(res)
+        res = self.__send_request(requests.delete, url)
+
+        return res.status_code
 
     def alter_table(self, table_name, columns):
         """
@@ -946,6 +955,14 @@ class Client(object):
         res = self.__send_request(requests.put, url, json=columns)
 
         return res
+
+    def get_default_schema(self):
+        schemas = self.get_schemas()
+        for schema in schemas:
+            if schema['isDefault']:
+                return schema['schemaName']
+
+        return None
 
     def get_table_names(self, schema=None):
         """
