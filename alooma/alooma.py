@@ -141,9 +141,6 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return res.json().get('config_clientName')
 
-    def get_zk_deployment_name(self):
-        return self.get_deployment_info()['deploymentName']
-
     def get_plumbing(self):
         """
         DEPRECATED - use get_structure() instead.
@@ -1332,10 +1329,9 @@ class Client(object):
 
         # Prep Data for Consolidation Post
         data = {
-        "custom_query": query,
-        "event_type": event_type,
-        "deployment_name": self.get_zk_deployment_name(),
-        "avoid_duplicates": False
+            "custom_query": query,
+            "event_type": event_type,
+            "avoid_duplicates": False
         }
         if frequency:
             data["frequency"] = frequency
