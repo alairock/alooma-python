@@ -98,7 +98,7 @@ class Client(object):
             headers = {"authorization": "API " + self.api_key}
             self.requests_params["headers"] = headers
 
-        self.account_name = self.__get_account_name()
+        self.account_name = account_name or self.__get_account_name()
 
     def __send_request(self, func, url, is_recheck=False, **kwargs):
         params = self.requests_params.copy()
