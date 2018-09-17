@@ -60,6 +60,7 @@ DEFAULT_TIMEOUT = 60
 MAPPING_TIMEOUT = 300
 
 BASE_URL = 'https://app.alooma.com'
+CUSTOM_CONSOLIDATION_V2 = 'v2/consolidation/custom'
 
 
 class FailedToCreateInputException(Exception):
@@ -1481,15 +1482,18 @@ class Client(object):
         if event_type is None:
             raise Exception('Event type must be provided')
 
-        scheduled_query_url = self.rest_url + 'custom-consolidation'
+        scheduled_query_url = self.rest_url + CUSTOM_CONSOLIDATION_V2
 
         # Prep Data for Consolidation Post
         data = {
             "custom_query": query,
             "event_type": event_type,
-            "frequency": frequency,
-            "run_at": run_at
+            "avoid_duplicates": False
         }
+        if frequency:
+            data["frequency"] = frequency
+        else:
+            data["run_at"] = run_at
 
         return self.__send_request(requests.post,
                                    scheduled_query_url,
