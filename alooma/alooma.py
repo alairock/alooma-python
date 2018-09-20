@@ -909,17 +909,13 @@ class Client(object):
 
         return parse_response_to_json(res)
 
-    def drop_table(self, table_name, schema=None, cascade=False):
+    def drop_table(self, schema, table_name, cascade=False):
         """
         :param table_name: self descriptive
         :param cascade: if true, drops all dependencies of a table along with
                         the table itself, otherwise only drops the table
-        :param schema: schema in which the table to delete is located. If no
-                       such schema is supplied, default schema is used
+        :param schema: schema in which the table to delete is located.
         """
-        if schema is None:
-            schema = self.get_default_schema()
-
         cascade_param = '?cascade=true' if cascade else ''
         url = self.rest_url + 'tables/{schema}/{table}{cascade}'.format(
             schema=schema,
@@ -956,14 +952,6 @@ class Client(object):
 
         return res
 
-    def get_default_schema(self):
-        schemas = self.get_schemas()
-        for schema in schemas:
-            if schema['isDefault']:
-                return schema['schemaName']
-
-        return None
-
     def get_table_names(self, schema=None):
         """
         :param schema - return tables from a specific schema, else use default
@@ -973,15 +961,11 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)
 
-    def get_table_dependencies(self, table_name, schema=None):
+    def get_table_dependencies(self, schema, table_name):
         """
         :param table_name: self descriptive
-        :param schema: schema in which the table to delete is located. If no
-                       such schema is supplied, default schema is used
+        :param schema: schema in which the table to delete is located.
         """
-        if schema is None:
-            schema = self.get_default_schema()
-
         url = self.rest_url + 'tables/{schema}/{table}/dependencies'.format(
             schema=schema,
             table=table_name,
