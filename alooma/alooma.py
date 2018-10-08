@@ -231,6 +231,19 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)
 
+    def get_event_type_dependencies(self, event_type):
+        """
+        Returns a dict representation of the requested event-type's
+        mapping and metadata if it exists
+        :param event_type:  The name of the event type
+        :return: A dict representation of the event-type's data
+        """
+        event_type = urllib.parse.quote(event_type, safe='')
+        url = self.rest_url + 'event-types/' + event_type + '/dependencies'
+
+        res = self.__send_request(requests.get, url)
+        return parse_response_to_json(res)
+
     def get_mapping(self, event_type):
         """
         Returns a dict representation of the mapping of the event
@@ -997,6 +1010,11 @@ class Client(object):
         :param table_name: self descriptive
         :param schema: schema in which the table to delete is located.
         """
+        output = self.get_output_config()['sinkType']
+        if output in ['SNOWFLAKE', 'BIGQUERY']:
+            raise Exception("Table dependencies currently not supported with "
+                            "%s" % output.capitalize())
+
         url = self.rest_url + 'tables/{schema}/{table}/dependencies'.format(
             schema=schema,
             table=table_name,
