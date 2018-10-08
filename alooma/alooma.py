@@ -233,10 +233,10 @@ class Client(object):
 
     def get_event_type_dependencies(self, event_type):
         """
-        Returns a dict representation of the requested event-type's
-        mapping and metadata if it exists
+        Returns a list of event-types that share a target table with the given
+        event-type
         :param event_type:  The name of the event type
-        :return: A dict representation of the event-type's data
+        :return: A list of event-types with the same mapping
         """
         event_type = urllib.parse.quote(event_type, safe='')
         url = self.rest_url + 'event-types/' + event_type + '/dependencies'
