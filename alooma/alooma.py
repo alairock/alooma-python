@@ -1011,7 +1011,8 @@ class Client(object):
         :param schema: schema in which the table to delete is located.
         """
         output = self.get_output_config()['sinkType']
-        if output in ['SNOWFLAKE', 'BIGQUERY']:
+        if output in [OUTPUTS['bigquery']['type'],
+                      OUTPUTS['snowflake']['type']]:
             raise Exception("Table dependencies currently not supported with "
                             "%s" % output.capitalize())
 
