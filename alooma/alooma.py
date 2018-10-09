@@ -62,6 +62,7 @@ DEFAULT_TIMEOUT = 60
 MAPPING_TIMEOUT = 300
 
 BASE_URL = 'https://app.alooma.com'
+CUSTOM_CONSOLIDATION_V2 = 'v2/consolidation/custom'
 
 
 class FailedToCreateInputException(Exception):
@@ -71,7 +72,10 @@ class FailedToCreateInputException(Exception):
 class Client(object):
 
     def __init__(self, username=None, password=None, account_name=None,
-                 base_url=None):
+                 base_url=None, api_key=None):
+
+        if api_key and (username or password):
+            raise Exception('Authorization should be performed by either an API key or username and password, but not both.')
 
         if base_url is None:
             base_url = BASE_URL
@@ -91,7 +95,13 @@ class Client(object):
             'timeout': DEFAULT_TIMEOUT,
             'cookies': self.cookie
         }
-        self.account_name = self.__get_account_name()
+
+        self.api_key = api_key
+        if self.api_key:
+            headers = {"authorization": "API " + self.api_key}
+            self.requests_params["headers"] = headers
+
+        self.account_name = account_name or self.__get_account_name()
 
     def __send_request(self, func, url, is_recheck=False, **kwargs):
         params = self.requests_params.copy()
@@ -102,6 +112,8 @@ class Client(object):
             return response
 
         if response.status_code == 401 and not is_recheck:
+            if self.api_key:
+                raise Exception('Invalid key or check account name.')
             self.__login()
 
             return self.__send_request(func, url, True, **kwargs)
@@ -131,17 +143,6 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return res.json().get('config_clientName')
 
-    def get_config(self):
-        """
-        Exports the entire system configuration in dict format.
-        This is also used periodically by Alooma for backup purposes,
-        :return: a dict representation of the system configuration
-        """
-        url_get = self.rest_url + 'config/export'
-        response = self.__send_request(requests.get, url=url_get)
-        config_export = parse_response_to_json(response)
-        return config_export
-
     def get_plumbing(self):
         """
         DEPRECATED - use get_structure() instead.
@@ -160,6 +161,36 @@ class Client(object):
         url_get = self.rest_url + 'plumbing/?resolution=1min'
         response = self.__send_request(requests.get, url_get)
         return parse_response_to_json(response)
+
+    def get_secrets(self):
+        """
+        Returns the list of existing secrets
+        :return: A list of secret keys
+        """
+        url = self.rest_url + 'secrets'
+        res = self.__send_request(requests.get, url)
+        res.raise_for_status()
+        return res.content
+
+    def set_secrets(self, secrets):
+        """
+        :param secrets:  dictionary of secrets to create/update
+        Create/Update secrets
+        """
+        url = self.rest_url + 'secrets'
+        res = self.__send_request(requests.put, url, json=secrets)
+        res.raise_for_status()
+        return res
+
+    def delete_secret(self, secret):
+        """
+        :param secret:  A key of a secret to delete
+        Deletes a secret
+        """
+        url = self.rest_url + 'secrets/' + secret
+        res = self.__send_request(requests.delete, url)
+        res.raise_for_status()
+        return res
 
     def get_mapping_mode(self):
         """
@@ -575,12 +606,20 @@ class Client(object):
         """
         Returns a map from module name to module code
         """
+        warnings.warn('get_all_transforms is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'get_code_engine_code instead',
+                      DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions'
         res = self.__send_request(requests.get, url)
         # from list of CodeSnippets to {moduleName: code} mapping
         return {item['functionName']: item['code'] for item in res.json()}
 
     def get_transform(self, module_name='main'):
+        warnings.warn('get_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'get_code_engine_module instead',
+                      DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
         try:
             res = self.__send_request(requests.get, url)
@@ -596,6 +635,10 @@ class Client(object):
                 raise
 
     def set_transform(self, transform, module_name='main'):
+        warnings.warn('set_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'set_code_engine_code instead',
+                      DeprecationWarning, stacklevel=2)
         data = {'language': 'PYTHON', 'code': transform,
                 'functionName': module_name}
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
@@ -603,6 +646,10 @@ class Client(object):
         return res
 
     def delete_transform(self, module_name):
+        warnings.warn('delete_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'delete_code_engine_module instead',
+                      DeprecationWarning, stacklevel=2)
         url = self.rest_url + 'transform/functions/{}'.format(module_name)
         return self.__send_request(requests.delete, url)
 
@@ -620,6 +667,11 @@ class Client(object):
                             'result' - the resulting event
                             'runtime' - millis it took the function to run
         """
+        warnings.warn('test_transform is deprecated since version 0.4.0 '
+                      'and will be removed in version 1.0, please use '
+                      'test_code_engine_code instead',
+                      DeprecationWarning, stacklevel=2)
+
         url = self.rest_url + 'transform/functions/run'
         if temp_transform is None:
             temp_transform = self.get_transform()
@@ -644,6 +696,11 @@ class Client(object):
                     which includes the result of the current transform function
                     after it was run with the sample.
         """
+        warnings.warn('test_transform_all_samples is deprecated since version'
+                      ' 0.4.0 and will be removed in version 1.0, please use '
+                      'test_code_engine_all_samples instead',
+                      DeprecationWarning, stacklevel=2)
+
         curr_transform = self.get_transform()
         samples_stats = self.get_samples_stats()
         results = []
@@ -660,6 +717,107 @@ class Client(object):
                         results.append(s)
         return results
 
+    def get_code_engine_code(self):
+        """
+        :return: a map from module name to module code
+        """
+        return self.get_all_transforms()
+
+    def get_code_engine_module(self, module_name='main'):
+        """
+        :param module_name: optional module_name to retrieve (gets 'main' by default)
+        :return: module code
+        """
+        return self.get_code_engine_code()[module_name]
+
+    def set_code_engine_code(self, modules):
+        """
+        :param modules: a map of module name (string) to code (string)
+        """
+        url = self.rest_url + 'transform/v2/functions'
+        data = [{
+            'language': 'PYTHON',
+            'functionName': module_name,
+            'code': modules[module_name]
+        } for module_name in modules.keys()]
+        res = self.__send_request(requests.post, url, json=data)
+        res.raise_for_status()
+
+        return res
+
+    def delete_code_engine_module(self, module_name):
+        """
+        :param module_name: module_name to delete
+        """
+        return self.delete_transform(module_name)
+
+    def test_code_engine_code(self, sample, modules_to_test=None):
+        """
+        :param sample:          a json string or a dict, representing a sample
+                                event
+        :param modules_to_test: optional a map of module name (string) to code
+                                (string).
+                                if not provided, the currently deployed
+                                modules will be used.
+        :return:                the results of a test run of the modules on the
+                                given sample. This returns a dictionary with the
+                                following keys:
+                                    'output' - strings printed by the transform
+                                               function
+                                    'result' - the resulting event
+                                    'runtime' - millis it took the code to run
+        """
+        url = self.rest_url + 'transform/v2/functions/run'
+        if modules_to_test is None:
+            modules_to_test = self.get_all_transforms()
+
+        modules_to_send = [{
+            'language': 'PYTHON',
+            'functionName': module_name,
+            'code': modules_to_test[module_name]
+        } for module_name in modules_to_test.keys()]
+
+        if not isinstance(sample, dict):
+            sample = json.loads(sample)
+
+        res = self.__send_request(requests.post, url, json={
+            'modules': modules_to_send,
+            'sample': sample
+        })
+        res.raise_for_status()
+        return json.loads(res.content)
+
+    def test_code_engine_all_samples(self, event_type=None, status_code=None):
+        """
+        test many samples on the current transform at once
+        :param event_type:  optional string containing event type name
+        :param status_code: optional status code string
+        :return:    a list of samples (filtered by the event type & status code
+                    if provided), for each sample, a 'result' key is added
+                    which includes the result of the current transform function
+                    after it was run with the sample.
+        """
+        current_modules = self.get_all_transforms()
+        modules = [{
+            'language': 'PYTHON',
+            'functionName': module_name,
+            'code': current_modules[module_name]
+        } for module_name in current_modules.keys()]
+        samples_stats = self.get_samples_stats()
+        results = []
+        event_types = [event_type] if event_type else samples_stats.keys()
+        for event_type in event_types:
+            status_codes = [status_code] if status_code \
+                else samples_stats[event_type].keys()
+            for sc in status_codes:
+                if samples_stats[event_type][sc] > 0:
+                    samples = self.get_samples(event_type, sc)
+                    for s in samples:
+                        s['result'] = self.test_code_engine_code(s['sample'],
+                                                                 modules)
+                        results.append(s)
+        return results
+
     def get_metrics_by_names(self, metric_names, minutes, resolution=None):
         if type(metric_names) != list and type(metric_names) == str:
             metric_names = [metric_names]
@@ -668,8 +826,8 @@ class Client(object):
                             "`list`")
         for metric_name in metric_names:
             if metric_name not in METRICS_LIST:
-                raise Exception("Metrics '{name}' not exists, please "
-                                "use one or more of those: {metrics}"
+                raise Exception("Metrics '{name}' does not exist, please "
+                                "use one or more of these: {metrics}"
                                 .format(name=metric_names,
                                         metrics=METRICS_LIST))
         if resolution is None:
@@ -1408,15 +1566,18 @@ class Client(object):
         if event_type is None:
             raise Exception('Event type must be provided')
 
-        scheduled_query_url = self.rest_url + 'custom-consolidation'
+        scheduled_query_url = self.rest_url + CUSTOM_CONSOLIDATION_V2
 
         # Prep Data for Consolidation Post
         data = {
             "custom_query": query,
             "event_type": event_type,
-            "frequency": frequency,
-            "run_at": run_at
+            "avoid_duplicates": False
         }
+        if frequency:
+            data["frequency"] = frequency
+        else:
+            data["run_at"] = run_at
 
         return self.__send_request(requests.post,
                                    scheduled_query_url,
