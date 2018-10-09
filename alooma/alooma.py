@@ -1040,6 +1040,19 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)
 
+    def get_table_dependencies(self, schema, table_name):
+        """
+        :param table_name: self descriptive
+        :param schema: schema in which the table to delete is located.
+        """
+        url = self.rest_url + 'tables/{schema}/{table}/dependencies'.format(
+            schema=schema,
+            table=table_name,
+        )
+
+        res = self.__send_request(requests.get, url)
+        return parse_response_to_json(res)
+
     # TODO standardize the responses (handling of error code etc)
     def get_tables(self, shallow=False, schema=None):
         """
