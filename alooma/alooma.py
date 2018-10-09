@@ -988,17 +988,23 @@ class Client(object):
 
         return fields
 
-    def drop_table(self, schema, table_name):
-        """ Drop Table on Default Output
-        :param schema: Schema of table to drop
-        :param table: Name of table to drop
+    def drop_table(self, schema, table_name, cascade=False):
         """
-        url = self.rest_url + endpoints.CREATE_TABLE.format(schema=schema,
-                                                            table=table_name)
-        res = self._Client__send_request(requests.delete, url)
-        res.raise_for_status()
+        :param table_name: self descriptive
+        :param cascade: if true, drops all dependencies of a table along with
+                        the table itself, otherwise only drops the table
+        :param schema: schema in which the table to delete is located.
+        """
+        cascade_param = '?cascade=true' if cascade else ''
+        url = self.rest_url + 'tables/{schema}/{table}{cascade}'.format(
+            schema=schema,
+            table=table_name,
+            cascade=cascade_param
+        )
 
-        return res
+        res = self.__send_request(requests.delete, url)
+
+        return res.status_code
 
     def alter_table(self, table_name, columns):
         """
