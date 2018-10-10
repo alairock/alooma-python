@@ -1,11 +1,12 @@
+import re
 import json
 import time
-import re
 import requests
 import warnings
+
 from six.moves import urllib
 
-from . import endpoints
+import endpoints
 
 MAPPING_MODES = ['AUTO_MAP', 'STRICT', 'FLEXIBLE']
 EVENT_DROPPING_TRANSFORM_CODE = "def transform(event):\n\treturn None"
@@ -944,6 +945,13 @@ class Client(object):
 
         return parse_response_to_json(res)
 
+    def create_table_like(self, schema, table, like_schema, like_table):
+        """ Create Table Like Existing Table on Default Output """
+        columns = self.get_table_schema(like_schema, like_table)
+        table_name = "%s/%s" % (schema, table)
+
+        return self.create_table(table_name, columns)
+
     def create_table_from_mapping(self, mapping, schema, table_name,
                                   dist_keys=None, sort_keys=None):
         """ Create Table Based on Mapping Fields
@@ -1121,6 +1129,17 @@ class Client(object):
         url = self.rest_url + 'plumbing/outputs'
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)[0]
+
+    def set_output_node(self, output):
+        """ Set Output Node
+        :param output_config: :type dict. Set Output from Node
+                pulled from get_output_node
+        """
+        url = self.rest_url + endpoints.OUTPUT.format(output_id=output["id"])
+        res = self._Client__send_request(requests.put, url, json=output)
+        res.raise_for_status()
+
+        return res.json()
 
     def set_output(self, output_config, output_name=None):
         """
