@@ -1016,7 +1016,6 @@ class Client(object):
         )
 
         res = self.__send_request(requests.get, url)
-
         return parse_response_to_json(res)
 
     # TODO standardize the responses (handling of error code etc)
