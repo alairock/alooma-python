@@ -1010,18 +1010,13 @@ class Client(object):
         :param table_name: self descriptive
         :param schema: schema in which the table to delete is located.
         """
-        output = self.get_output_config()['sinkType']
-        if output in [OUTPUTS['bigquery']['type'],
-                      OUTPUTS['snowflake']['type']]:
-            raise Exception("Table dependencies currently not supported with "
-                            "%s" % output.capitalize())
-
         url = self.rest_url + 'tables/{schema}/{table}/dependencies'.format(
             schema=schema,
             table=table_name,
         )
 
         res = self.__send_request(requests.get, url)
+
         return parse_response_to_json(res)
 
     # TODO standardize the responses (handling of error code etc)
