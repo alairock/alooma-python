@@ -231,15 +231,15 @@ class Client(object):
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)
 
-    def get_event_type_dependencies(self, event_type):
+    def get_event_type_conflicts(self, event_type):
         """
         Returns a list of event-types that share a target table with the given
         event-type
         :param event_type:  The name of the event type
-        :return: A list of event-types with the same mapping
+        :return: A list of event-types with that map to the same destination
         """
         event_type = urllib.parse.quote(event_type, safe='')
-        url = self.rest_url + 'event-types/' + event_type + '/dependencies'
+        url = self.rest_url + 'event-types/' + event_type + '/conflicts'
 
         res = self.__send_request(requests.get, url)
         return parse_response_to_json(res)
