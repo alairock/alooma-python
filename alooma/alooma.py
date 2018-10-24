@@ -1551,14 +1551,14 @@ class Client(object):
 
         return res
 
-    def get_used_credits(self, from_day=None, to_day=None, all=False):
+    def get_used_credits(self, from_day=None, to_day=None, all_accounts=False):
         """ Get the credits consumption per day for the asked period
         for the whole company or for the login account
         The current day used credits can change according to real use
 
             :param from_day: 'YYYY-MM-DD' from date period, if None, no from limit
             :param to_day: 'YYYY-MM-DD' to date history, if None, until today
-            :param all: if true, return the used credits for all accounts
+            :param all_accounts: if true, return the used credits for all accounts
         """
         url = self.rest_url + "credits/used-credits"
         sep = '?'
@@ -1568,8 +1568,8 @@ class Client(object):
         if to_day:
             url += '%sto=%s' % (sep, to_day)
             sep = '&'
-        if all:
-            url += '%sall=%s' % (sep, all)
+        if all_accounts:
+            url += '%sall=%s' % (sep, all_accounts)
             sep = '&'
         response = self.__send_request(requests.get, url)
         return parse_response_to_json(response)
