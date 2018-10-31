@@ -1081,8 +1081,8 @@ class Client(object):
         :param schema: output table schema
         :param table_name: output table name
         """
-        url = self.rest_url + endpoints.CREATE_TABLE.format(schema=schema,
-                                                            table=table_name)
+        url = self.rest_url + endpoints.TABLE_ENDPOINT.format(schema=schema,
+                                                              table=table_name)
         res = self._Client__send_request(requests.get, url)
 
         res.raise_for_status()
