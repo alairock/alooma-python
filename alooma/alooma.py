@@ -5,7 +5,7 @@ import requests
 import warnings
 from six.moves import urllib
 
-from . import endpoints
+from alooma import endpoints
 
 MAPPING_MODES = ['AUTO_MAP', 'STRICT', 'FLEXIBLE']
 EVENT_DROPPING_TRANSFORM_CODE = "def transform(event):\n\treturn None"

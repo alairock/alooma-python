@@ -1,4 +1,3 @@
-
 # Inputs
 INPUTS = 'inputs'
 INPUT_STATE = 'inputs/{input_id}'
