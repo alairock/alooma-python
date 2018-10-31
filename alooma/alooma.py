@@ -1069,7 +1069,7 @@ class Client(object):
         """
         inputs = self._get_inputs().values()
         input_data = [i for i in inputs if i['name']==name]
-        if len(input_data) == 0:
+        if not input_data:
             raise KeyError("Input %s Does Not Exist" % name)
 
         input_id = input_data[0]['id']
