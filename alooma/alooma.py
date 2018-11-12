@@ -1505,6 +1505,21 @@ class Client(object):
         Returns all scheduled queries
         :return: a dict representing all scheduled queries
         """
+        warnings.warn('get_scheduled_queries() is being deprecated'
+                      'and should be replaced by get_queries()',
+                      DeprecationWarning, stacklevel=2)
+        results = {}
+
+        url = self.rest_url + endpoints.CONSOLIDATION
+        queries = self.__send_request(requests.get, url).json()
+
+        return results
+
+    def get_queries(self):
+        """
+        Returns all scheduled queries
+        :return: a dict representing all scheduled queries
+        """
         results = {}
 
         url = self.rest_url + endpoints.CONSOLIDATION_V2
