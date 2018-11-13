@@ -1525,9 +1525,6 @@ class Client(object):
         url = self.rest_url + endpoints.CONSOLIDATION_V2
         queries = self.__send_request(requests.get, url).json()
 
-        for query in queries:
-            results[query["id"]] = query
-
         return results
 
     def remove_scheduled_query(self, query_id):
