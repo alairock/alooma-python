@@ -1516,7 +1516,7 @@ class Client(object):
     def get_queries(self):
         """
         Returns all scheduled queries
-        :return: a dict representing all scheduled queries
+        :return: a list representing all scheduled queries
         """
         results = {}
 
