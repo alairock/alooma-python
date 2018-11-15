@@ -1511,9 +1511,7 @@ class Client(object):
         results = {}
 
         url = self.rest_url + endpoints.CONSOLIDATION
-        queries = self.__send_request(requests.get, url).json()
-
-        return results
+        return self.__send_request(requests.get, url).json()
 
     def get_queries(self):
         """
@@ -1523,9 +1521,7 @@ class Client(object):
         results = {}
 
         url = self.rest_url + endpoints.CONSOLIDATION_V2
-        queries = self.__send_request(requests.get, url).json()
-
-        return results
+        return self.__send_request(requests.get, url).json()
 
     def remove_scheduled_query(self, query_id):
         url = self.rest_url + endpoints.CONSOLIDATION_STATE_V2.format(
