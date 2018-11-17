@@ -1059,7 +1059,7 @@ class Client(object):
         url = self.rest_url + endpoints.INPUT_STATE.format(input_id=input_id)
         res = self.__send_request(requests.get, url)
 
-        return alooma.parse_response_to_json(res)
+        return parse_response_to_json(res)
 
     def get_input_by_name(self, name):
         """ Return Dict of Input Configuration and Task Information
@@ -1537,7 +1537,7 @@ class Client(object):
         url = self.rest_url + endpoints.CONSOLIDATION_RUN_V2.format(
                                         query_id=query_id)
         res = self.__send_request(requests.post, url)
-        return res.json()
+        return res
 
     def get_scheduled_queries_in_error_state(self):
         """
