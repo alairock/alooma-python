@@ -4,14 +4,14 @@ Alooma.py is a powerful and convenient way to set up and manage your Alooma plat
 
 Alooma.py lets you programmatically perform all the basics of operating the Alooma platform:
 
-- [Create and manage your inputs and mappings](#creating)
-- [Write, test, and deploy the code that runs on your stream](#using)
-- [Troubleshoot your event streams](#trouble)
-- [Query system metrics](#querying)
+- [Create and manage your inputs and mappings](#creating-and-mapping-an-input)
+- [Write, test, and deploy the code that runs on your stream](#using-the-code-engine)
+- [Troubleshoot your event streams](#troubleshooting-problematic-events)
+- [Query system metrics](#querying-system-metrics)
 
 ## Getting started
 
-- To install alooma.py simply run:  
+- To install alooma.py simply run:
 
   ```shell
   sudo pip install alooma
@@ -47,15 +47,41 @@ To set up your inputs programmatically instead of via UI, you can follow this ex
   new_input_config = dict(input_data['configuration'])
   new_input_config['...']] = '...'
   api.create_input({
-  	'name': '<name for the new input>',                  
+  	'name': '<name for the new input>',
   	'type': input_data['type'],
   	'configuration': new_input_config
   })
   ```
 
+- More explicitly, the possible fields in the `config` dictionary are the following
+
+    ```python
+    config = {
+      'configuration': {
+          'auto_map': u'true',
+          'base_url': u'<URL>',
+          'data_field': <data_field>',
+          'frequency': <frequency>,
+          'headers': [<headres>],
+          'input_default_schema': u'<input_default_schema>',
+          'page_parameter': u'startAt',
+          'pagination_type': u'<pagination_type>',
+          'parameters': [],
+          'password': PASSWORD,
+          'primary_keys': [u'<PK>'],
+          'request': u'GET',
+          'username': '<userName>',
+          "increment": 50,
+          "initial_value": 0
+        },
+        'name': u'<input Name>',
+        'type': 'REST_INPUT',
+    }
+    ```
+
   - Note that this flow does not support any inputs that require OAuth (such as Google Adwords or Google Analytics), Custom Webhooks, or any of the SDKs.
   - Set `one_click` to False if you want to manage table creation and mapping for this input.
-  - On success the function returns a string representing the created input ID.  
+  - On success the function returns a string representing the created input ID.
     On failure, an exception is raised.
 
 - Call `api.get_event_types()` to get a list of event types that exist in the system and their mapping status. Each element in the returned list is a dictionary containing these keys:
@@ -70,7 +96,7 @@ To set up your inputs programmatically instead of via UI, you can follow this ex
 
 - Set the mapping for an event type by calling `api.set_mapping(mapping, event_type_name)` and passing it a mapping object. You can modify the one you got from `get_mapping`.
 
-  - On success the function returns an HttpResponse object with status code 2XX.  
+  - On success the function returns an HttpResponse object with status code 2XX.
     On failure, an exception is raised.
 
 - Note that you can get a list of available tables in the target output using `api.get_tables()`. If the table you want to map to doesn't exist, you'll have to create it in the target output, manually, or by using `api.create_table(...)`.
@@ -86,7 +112,7 @@ A scenario where alooma.py provides capability not exposed in the UI is the abil
 - Deploy code to the Code Engine using `api.set_transform(code, module_name='main')`
 
   - If a module name is not passed, it will set the "main" module.
-  - On success the function returns an HttpResponse object with status code 2XX.  
+  - On success the function returns an HttpResponse object with status code 2XX.
     On failure, an exception is raised.
   - Note that you can delete a module by setting it with an empty code block.
 
@@ -125,10 +151,10 @@ A scenario where alooma.py provides capability not exposed in the UI is the abil
   api.set_transform("""
     import submodule
 
-    def transform(event): 
+    def transform(event):
       event['name'] = submodule.transform_names.get(event['name'], event['name'])  
-      # The above line is equivalent to: # if event['name'] in submodule.transform_names: 
-      #     event['name'] = submodule.transform_names[event['name']] 
+      # The above line is equivalent to: # if event['name'] in submodule.transform_names:
+      #     event['name'] = submodule.transform_names[event['name']]
 
       if 'value' in event:
         event['value'] = submodule.transform_ft_to_mtr(event['value'])
@@ -143,7 +169,7 @@ As any good developer knows, you don't just go and deploy code without testing 
 
 In the case where you have errors in Alooma, you may want to pull the notification information and address the events that created errors.
 
-- Call `api.get_notifications(epoch_time)` to pull a list of notifications between some time (seconds since epoch) and now.  
+- Call `api.get_notifications(epoch_time)` to pull a list of notifications between some time (seconds since epoch) and now.
   This returns a dictionary with `messages as a key and a list of the notifications in ascending time order as its value.`
 - Address the errors reported in the notifications by either changing the mapping or the Code Engine code with `api.set_mapping(mapping, event_type)` or `api.set_transform(code, module_name='main')`, described above.
 - Start the restream to re-run all the events that were in the Restream Queue with `api.start_restream()`.
