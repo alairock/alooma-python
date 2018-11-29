@@ -1,3 +1,4 @@
+import datetime
 import json
 import time
 import re
@@ -1609,16 +1610,23 @@ class Client(object):
         for the whole company or for the login instance.
         The current day used credits changes between 2 calls according to the use.
 
-            :param from_day: 'YYYY-MM-DD' from date period, if None, no from limit
-            :param to_day: 'YYYY-MM-DD' to date history, if None, until today
+            :param from_day: 'YYYY-MM-DD' (str or datetime) from date period, if None, no from limit
+            :param to_day: 'YYYY-MM-DD' (str or datetime) to date history, if None, until today
             :param all_instances: if true, return the used credits for all instances of the company
+                        i.e. get used credits for all company's instance_name
+            :return a list of used credits of the asked period:
+                  example: [{'date': '2018-07-02', 'instance_name': 'instance-name', 'value': 3.0}, ...]
         """
         url = self.rest_url + "credits/used-credits"
         sep = '?'
         if from_day:
+            if isinstance(from_day, datetime.datetime):
+                from_day = from_day.strftime('%Y-%m-%d')
             url += '%sfrom=%s' % (sep, from_day)
             sep = '&'
         if to_day:
+            if isinstance(to_day, datetime.datetime):
+                to_day = to_day.strftime('%Y-%m-%d')
             url += '%sto=%s' % (sep, to_day)
             sep = '&'
         if all_instances:
