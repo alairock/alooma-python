@@ -53,29 +53,42 @@ To set up your inputs programmatically instead of via UI, you can follow this ex
   })
   ```
 
-- More explicitly, the possible fields in the `config` dictionary are the following
+- For REST inputs (`'type': 'REST_INPUT'`), the possible fields in the `config` dictionary are the following:
 
     ```python
     config = {
       'configuration': {
+          # Specific for REST inputs
           'auto_map': u'true',
           'base_url': u'<URL>',
           'data_field': <data_field>',
           'frequency': <frequency>,
           'headers': [<headres>],
           'input_default_schema': u'<input_default_schema>',
-          'page_parameter': u'startAt',
-          'pagination_type': u'<pagination_type>',
           'parameters': [],
-          'password': PASSWORD,
+          'password': PASSWORD,  # possibly your API key
           'primary_keys': [u'<PK>'],
           'request': u'GET',
           'username': '<userName>',
-          "increment": 50,
-          "initial_value": 0
         },
         'name': u'<input Name>',
-        'type': 'REST_INPUT',
+        'type': 'REST_INPUT',  # This specifies input is of type REST
+    }
+    ```
+
+- The specifics of REST inputs with *incremental pagination* are the following:
+
+    ```python
+    config = {
+      'configuration': {
+          ...
+          # INCREMENTAL PAGINATION specific configurations
+          "pagination_type": u"Incremental",  # Pagination type
+          'page_parameter': <page-parameter-name>  # e.g. 'startAt'
+          "increment": <page-increment>,  # e.g. 50
+          "initial_value": <page-initial-value>  # e.g. 0
+        },
+        ...
     }
     ```
 
