@@ -5,6 +5,8 @@ import requests
 import warnings
 from six.moves import urllib
 
+from . import endpoints
+
 MAPPING_MODES = ['AUTO_MAP', 'STRICT', 'FLEXIBLE']
 EVENT_DROPPING_TRANSFORM_CODE = "def transform(event):\n\treturn None"
 DEFAULT_TRANSFORM_CODE = "def transform(event):\n\treturn event"
@@ -1027,23 +1029,52 @@ class Client(object):
 
     def get_inputs(self, name=None, input_type=None, input_id=None):
         """
-        Get a list of all the input nodes in the system
+        Get a list of all the inputs in the system
+
         :param name: Filter by name (accepts Regex)
         :param input_type: Filter by type (e.g. "mysql")
-        :param input_id: Filter by node ID
+        :param input_id: Filter by Input ID
         :return: A list of all the inputs in the system, along
         with metadata and configurations
         """
-        nodes = [node for node in self.get_plumbing()['nodes']
-                 if node['category'] == 'INPUT']
+        inputs = self._get_inputs().values()
         if input_type:
-            nodes = [node for node in nodes if node['type'] == input_type]
+            inputs = [inp for inp in inputs if inp['type'] == input_type]
         if name:
             regex = re.compile(name)
-            nodes = [node for node in nodes if regex.match(node['name'])]
+            inputs = [inp for inp in inputs if regex.match(inp['name'])]
         if input_id:
-            nodes = [node for node in nodes if node['id'] == input_id]
-        return nodes
+            inputs = [inp for inp in inputs if inp['id'] == input_id]
+
+        return inputs
+
+    def _get_inputs(self):
+        """ Return List of Input Configurations """
+        url = self.rest_url + endpoints.INPUTS
+        res = self.__send_request(requests.get, url)
+        return parse_response_to_json(res)
+
+    def get_input_by_id(self, input_id):
+        """ Return Input Data from Input ID """
+        url = self.rest_url + endpoints.INPUT_STATE.format(input_id=input_id)
+        res = self.__send_request(requests.get, url)
+
+        return parse_response_to_json(res)
+
+    def get_input_by_name(self, name):
+        """ Return Dict of Input Configuration and Task Information
+
+        :param name: Name of the Input to Pull
+        :return: A dict with the job and task data
+        """
+        inputs = self._get_inputs().values()
+        input_data = [i for i in inputs if i['name']==name]
+        if not input_data:
+            raise KeyError("Input %s Does Not Exist" % name)
+
+        input_id = input_data[0]['id']
+
+        return self.get_input_by_id(input_id)
 
     def get_output_node(self):
         url = self.rest_url + 'plumbing/outputs'
@@ -1469,22 +1500,44 @@ class Client(object):
 
         return res.json()
 
-    # SCHEDULED QUERIES #
     def get_scheduled_queries(self):
         """
         Returns all scheduled queries
         :return: a dict representing all scheduled queries
         """
-        url = self.rest_url + 'consolidation'
-        return requests.get(url, **self.requests_params).json()
+        warnings.warn('get_scheduled_queries() is being deprecated'
+                      'and should be replaced by get_queries()',
+                      DeprecationWarning, stacklevel=2)
+        results = {}
+
+        url = self.rest_url + endpoints.CONSOLIDATION
+        return self.__send_request(requests.get, url).json()
+
+    def get_queries(self):
+        """
+        Returns all scheduled queries
+        :return: a list representing all scheduled queries
+        """
+        results = {}
+
+        url = self.rest_url + endpoints.CONSOLIDATION_V2
+        return self.__send_request(requests.get, url).json()
 
     def remove_scheduled_query(self, query_id):
-        url = self.rest_url + 'consolidation/' + query_id
+        url = self.rest_url + endpoints.CONSOLIDATION_STATE_V2.format(
+                                        query_id=str(query_id))
         res = self.__send_request(requests.delete, url)
         if not res.ok:
             raise Exception('Failed deleting query id=%s '
                             'status_code=%d response=%s' %
                             (query_id, res.status_code, res.content))
+
+    def run_query(self, query_id):
+        """ Run Consolidation """
+        url = self.rest_url + endpoints.CONSOLIDATION_RUN_V2.format(
+                                        query_id=query_id)
+        res = self.__send_request(requests.post, url)
+        return res
 
     def get_scheduled_queries_in_error_state(self):
         """
