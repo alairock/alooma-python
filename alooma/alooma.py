@@ -1608,10 +1608,10 @@ class Client(object):
     def get_used_credits(self, from_day=None, to_day=None, all_instances=False):
         """ Get the credits consumption per day for the asked period
         for the whole company or for the login instance.
-        The current day used credits changes between 2 calls according to the use.
+        The current day used credits may change between 2 calls according to the use.
 
-            :param from_day: 'YYYY-MM-DD' (str or datetime) from date period, if None, no from limit
-            :param to_day: 'YYYY-MM-DD' (str or datetime) to date history, if None, until today
+            :param from_day: 'YYYY-MM-DD' (str or datetime) first day of asked period, if None: returns from the first kept day
+            :param to_day: 'YYYY-MM-DD' (str or datetime) last day of the asked period, if None: returns until the current day
             :param all_instances: if true, return the used credits for all instances of the company
                         i.e. get used credits for all company's instance_name
             :return a list of used credits of the asked period:
