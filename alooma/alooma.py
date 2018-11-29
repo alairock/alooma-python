@@ -1610,9 +1610,9 @@ class Client(object):
         for the whole company or for the login instance.
         The current day used credits may change between 2 calls according to the use.
 
-            :param from_day: 'YYYY-MM-DD' (str or datetime) first day of asked period, if None: returns from the first kept day
-            :param to_day: 'YYYY-MM-DD' (str or datetime) last day of the asked period, if None: returns until the current day
-            :param all_instances: if true, return the used credits for all instances of the company
+            :param from_day: string (format 'YYYY-MM-DD') or datetime: first day of asked period, if None: returns from the first kept day
+            :param to_day: string (format 'YYYY-MM-DD') or datetime: last day of the asked period, if None: returns until the current day
+            :param all_instances: boolean: if true, return the used credits for all instances of the company
                         i.e. get used credits for all company's instance_name
             :return a list of used credits of the asked period:
                   example: [{'date': '2018-07-02', 'instance_name': 'instance-name', 'value': 3.0}, ...]
