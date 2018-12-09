@@ -1,3 +1,4 @@
+import datetime
 import json
 import time
 import re
@@ -1603,6 +1604,48 @@ class Client(object):
         res.raise_for_status()
 
         return res
+
+    def get_used_credits(self, from_day=None, to_day=None, all_instances=False):
+        """ Get the credits consumption per day for the asked period
+        for the whole company or for the login instance.
+        The current day used credits may change between 2 calls according to the use.
+
+            :param from_day: string (format 'YYYY-MM-DD') or datetime: first day of asked period, if None: returns from the first kept day
+            :param to_day: string (format 'YYYY-MM-DD') or datetime: last day of the asked period, if None: returns until the current day
+            :param all_instances: boolean: if true, return the used credits for all instances of the company
+                        i.e. get used credits for all company's instance_name
+            :return a list of used credits of the asked period:
+                  example: [{'date': '2018-07-02', 'instance_name': 'instance-name', 'value': 3.0}, ...]
+        """
+        url = self.rest_url + "credits/used-credits"
+        sep = '?'
+        if from_day:
+            if isinstance(from_day, datetime.datetime):
+                from_day = from_day.strftime('%Y-%m-%d')
+            url += '%sfrom=%s' % (sep, from_day)
+            sep = '&'
+        if to_day:
+            if isinstance(to_day, datetime.datetime):
+                to_day = to_day.strftime('%Y-%m-%d')
+            url += '%sto=%s' % (sep, to_day)
+            sep = '&'
+        if all_instances:
+            url += '%sall=%s' % (sep, all_instances)
+            sep = '&'
+        response = self.__send_request(requests.get, url)
+        return parse_response_to_json(response)
+
+    def get_company_credits(self):
+        """
+        Returns the company credits status:
+         - Current Period
+         - used credits for the current period
+         - total credits for the current period
+        :return: A dict representing the company credits status
+        """
+        url = self.rest_url + "credits/company"
+        response = self.__send_request(requests.get, url)
+        return parse_response_to_json(response)
 
 
 class Alooma(Client):
