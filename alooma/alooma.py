@@ -1647,6 +1647,41 @@ class Client(object):
         response = self.__send_request(requests.get, url)
         return parse_response_to_json(response)
 
+    def get_loaded_events_per_table_summary(self, from_date, to_date=None, all_instances=False):
+        """ Get the count and last time of loaded events per table for the asked period
+        for the whole company or for the login instance.
+
+            :param from_date: string (format 'YYYY-MM-DDTHH:MM:MM') or datetime: from date of asked period
+            :param to_date: string (format 'YYYY-MM-DDTHH:MM:MM') or datetime: to date of the asked period, if None: returns until now
+            :param all_instances: boolean: if true, return the loaded events for all instances of the company
+            :return a list of loaded events for the asked period.
+                    The precision of the last loaded event time is SECOND/MINUTE/HOUR/DAY according to its date:
+                       - SECOND for the last 2 hours
+                       - MINUTE for the 4 last days
+                       - HOUR for the 31 last days
+                       - DAY for the older one
+                  examples:
+                    - [{"count":25,"from_date":"2018-12-13T00:00:00","instance_name":"alooma","last":"2018-12-13T00:02:00","precision":"MINUTE","table_name":"SAMPLE1.USER_LOG","to_date":"2018-12-13T07:25:18"}, ...]
+                    - [{"count":3,"from_date":"2018-12-13T07:00:00","instance_name":"alooma","last":"2018-12-13T07:01:34","precision":"SECOND","table_name":"SAMPLE2.PARTNERS_LOG","to_date":"2018-12-13T07:27:21"}, ...]
+        """
+        assert from_date, "from_date is mandatory"
+        url = self.rest_url + "events/loaded-events-per-table/summary"
+        sep = '?'
+        if isinstance(from_date, datetime.datetime):
+            from_date = from_date.strftime('%Y-%m-%dT%H:%M:%S')
+        url += '%sfrom=%s' % (sep, from_date)
+        sep = '&'
+        if to_date:
+            if isinstance(to_date, datetime.datetime):
+                to_date = to_date.strftime('%Y-%m-%dT%H:%M:%S')
+            url += '%sto=%s' % (sep, to_date)
+            sep = '&'
+        if all_instances:
+            url += '%sall=%s' % (sep, all_instances)
+            sep = '&'
+        response = self.__send_request(requests.get, url)
+        return parse_response_to_json(response)
+
 
 class Alooma(Client):
 
