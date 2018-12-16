@@ -1664,7 +1664,8 @@ class Client(object):
                     - [{"count":25,"from_date":"2018-12-13T00:00:00","instance_name":"alooma","last":"2018-12-13T00:02:00","precision":"MINUTE","table_name":"SAMPLE1.USER_LOG","to_date":"2018-12-13T07:25:18"}, ...]
                     - [{"count":3,"from_date":"2018-12-13T07:00:00","instance_name":"alooma","last":"2018-12-13T07:01:34","precision":"SECOND","table_name":"SAMPLE2.PARTNERS_LOG","to_date":"2018-12-13T07:27:21"}, ...]
         """
-        assert from_date, "from_date is mandatory"
+        if not from_date:
+            raise AssertionError("from_date is mandatory")
         url = self.rest_url + "events/loaded-events-per-table/summary"
         sep = '?'
         if isinstance(from_date, datetime.datetime):
