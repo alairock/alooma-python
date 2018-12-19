@@ -1514,6 +1514,25 @@ class Client(object):
         url = self.rest_url + endpoints.CONSOLIDATION
         return self.__send_request(requests.get, url).json()
 
+    def create_consolidation(self, configuration, custom_variables=None):
+        """ Create Consolidation Given Configuration
+
+        :param configuration: requires event_type and frequency
+        :param custom_variables: custom variables to add to consolidation
+        """
+        if "deployment_name" not in configuration:
+            deployment_name = self.get_deployment_info()['deploymentName']
+            configuration["deployment_name"] = deployment_name
+        if custom_variables:
+            if "custom_variables" not in configuration:
+                configuration["custom_variables"] = {}
+                configuration["custom_variables"].update(custom_variables)
+
+        url = self.rest_url + endpoints.CONSOLIDATION_V2
+        res = self.__send_request(requests.post, url, json=configuration)
+
+        return res.json()
+
     def get_queries(self):
         """
         Returns all scheduled queries
